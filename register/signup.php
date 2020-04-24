@@ -2,6 +2,9 @@
     // セッション使用宣言
     session_start();
 
+    // タイムゾーン設定
+    date_default_timezone_set("Asia/Tokyo");
+
     // エラー の種類を保存する配列
     $errors = array();
 
