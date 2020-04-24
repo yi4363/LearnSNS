@@ -1,19 +1,12 @@
 <?php
-
-    // セッション使用宣言
-    session_start();
-
     // エラー の種類を保存する配列
     $errors = array();
-
-    date_default_timezone_set("Asia/Tokyo");
-    // タイムゾーン設定
 
     if (!empty($_POST)) {
         $name = $_POST["input_name"];
         $email = $_POST["input_email"];
         $password = $_POST["input_password"];
-        // null, "", 0以外なら通す
+        // null, "", 空以外なら通す
 
         if ($name == "") {
             $errors["name"] = "blank";
@@ -45,23 +38,6 @@
         }else{
             $errors["img_name"] = "blank";
         }
-    }
-
-    // エラーがなかったときの処理
-    if (empty($errors)) {
-        $date_str = date("YmdHis");
-        $submit_file_name = $date_str . $file_name;
-
-        move_uploaded_file($_FILES["input_img_name"]["tmp_name"],"../user_profile_img/" . $submit_file_name);
-        // 画像アップロード
-
-        $_SESSION["register"]["name"] = $_POST["input_name"];
-        $_SESSION["register"]["email"] = $_POST["input_email"];
-        $_SESSION["register"]["password"] = $_POST["input_password"];
-        $_SESSION["register"]["img_name"] = $submit_file_name;
-
-        header("Location: check.php");
-        exit();
     }
 ?>
 <!DOCTYPE html>
