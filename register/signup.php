@@ -1,7 +1,7 @@
 <?php
 
-    session_start();
     // セッション使用宣言
+    session_start();
 
     // エラー の種類を保存する配列
     $errors = array();
@@ -54,6 +54,11 @@
 
         move_uploaded_file($_FILES["input_img_name"]["tmp_name"],"../user_profile_img/" . $submit_file_name);
         // 画像アップロード
+
+        $_SESSION["register"]["name"] = $_POST["input_name"];
+        $_SESSION["register"]["email"] = $_POST["input_email"];
+        $_SESSION["register"]["password"] = $_POST["input_password"];
+        $_SESSION["register"]["img_name"] = $submit_file_name;
 
         header("Location: check.php");
         exit();
