@@ -2,8 +2,18 @@
     // セッション使用宣言
     session_start();
 
-    // タイムゾーン設定
-    date_default_timezone_set("Asia/Tokyo");
+    // パラメータにaction存在時
+    // チェック画面から戻ってきた時の処理
+    if (isset($_GET["action"]) && $_GET["action"] == "rewrite") {
+        $_POST["input_name"] = $_SESSION["register"]["name"];
+        $_POST["input_email"] = $_SESSION["register"]["email"];
+        $_POST["input_password"] = $_SESSION["register"]["password"];
+
+        $errors["rewrite"] = true;
+    }
+
+    $name = "";
+    $email = "";
 
     // エラー の種類を保存する配列
     $errors = array();
@@ -12,7 +22,7 @@
         $name = $_POST["input_name"];
         $email = $_POST["input_email"];
         $password = $_POST["input_password"];
-        // null, "", 空以外なら通す
+        // null, "", 0以外なら通す
 
         if ($name == "") {
             $errors["name"] = "blank";
@@ -32,8 +42,12 @@
             $errors["password"] = "length";
         }
 
-        // 画像名を代入
-        $file_name = $_FILES["input_img_name"]["name"];
+        $file_name = "";
+        if (!isset($_GET["action"])) {
+            // 画像名を代入
+            $file_name = $_FILES["input_img_name"]["name"];
+        }
+
         if (!empty($file_name)) {
             $file_type = substr($file_name, -3);
             // substr関数で拡張子の文字列取得
@@ -48,6 +62,9 @@
 
         // エラーがなかったときの処理
         if (empty($errors)) {
+            // タイムゾーン設定
+            date_default_timezone_set("Asia/Tokyo");
+
             $date_str = date("YmdHis");
             $submit_file_name = $date_str.$file_name;
 
@@ -81,14 +98,14 @@
         <form action="signup.php" method="post" enctype="multipart/form-data">
           <div class="form-group">
             <label for="name">ユーザー名</label>
-            <input type="text" name="input_name" class="form-control" id="name" placeholder="山田 太郎">
+            <input type="text" name="input_name" class="form-control" id="name" placeholder="山田 太郎" value="<?php echo htmlspecialchars($name); ?>">
             </div>
           <?php if (isset($errors["name"]) && $errors["name"] == "blank"): ?>
             <p class="text-danger">ユーザー名を入力してください</p>
           <?php endif; ?>
           <div class="form-group">
             <label for="email">メールアドレス</label>
-            <input type="email" name="input_email" class="form-control" id="email" placeholder="example@gmail.com">
+            <input type="email" name="input_email" class="form-control" id="email" placeholder="example@gmail.com" value="<?php echo htmlspecialchars($email); ?>">
             </div>
           <?php if (isset($errors["email"]) && $errors["email"] == "blank"): ?>
             <p class="text-danger">メールアドレスを入力してください</p>
@@ -101,6 +118,9 @@
           <?php endif; ?>
           <?php if (isset($errors["password"]) && $errors["password"] == "length"): ?>
             <p class="text-danger">パスワードは４〜１６文字で入力してください</p>
+          <?php endif; ?>
+          <?php if (!empty($errors)): ?>
+            <p class="text-danger">パスワードを再度入力してください</p>
           <?php endif; ?>
           </div> 
           <div class="form-group"> 
