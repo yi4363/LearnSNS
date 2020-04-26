@@ -28,6 +28,23 @@
 
     $signin_user = $stmt->fetch(PDO::FETCH_ASSOC);
 
+    // 表示用の配列用意
+    $feeds = array();
+
+    // テーブル結合
+    $sql = "SELECT `f`.*, `u`.`name`, `u`.`img_name` FROM `feeds` AS `f` LEFT JOIN `users` AS `u` ON `f`.`user_id` = `u` . `id` ORDER BY `created` DESC";
+    $data = array();
+    $stmt = $dbh->prepare($sql);
+    $stmt->execute($data);
+
+    while (true) {
+        $record = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($record == false) {
+            break;
+        }
+        // SQLの実行結果を連想配列で取得
+        $feeds[] = $record;
+    }
 ?>
 <!DOCTYPE html>
 <html lang="ja">
