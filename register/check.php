@@ -1,6 +1,9 @@
 <?php
     session_start();
 
+    // 別ファイル読み込み
+    require("../dbconnect.php");
+
     if (!isset($_SESSION["register"])) {
         header("Location: signup.php");
         exit();
@@ -10,6 +13,18 @@
     $email = $_SESSION["register"]["email"];
     $password = $_SESSION["register"]["password"];
     $img_name = $_SESSION["register"]["img_name"];
+
+    // 登録ボタン押下時の処理
+    if (!empty($_POST)) {
+        $sql = "INSERT INTO `users` SET `name`=?, `email`=?, `password`=?, `img_name`=?, `created`=NOW()";
+        $data = array($name, $email, $password_hash($password, PASSWORD_DEFAULT), $img_name);
+        $stmt = $dbh->prepare($sql);
+        $stmt->execute($data);
+
+        // セッション中身削除
+        unset($_SESSION["register"]);
+        header("Location: thanks.php");
+    }
 ?>
 <!DOCTYPE html>
 <html lang="ja">
