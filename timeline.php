@@ -45,6 +45,26 @@
         // SQLの実行結果を連想配列で取得
         $feeds[] = $record;
     }
+
+    // 取得している1feedに対するコメント情報取得
+    $comment_sql = "SELECT `c`.*, `u`.`name`, `u`.`img_name` FROM `comments` AS `c` LEFT JOIN `users` AS `u` ON `c`.`user_id` = `u`.`id` WHERE `feed_id`=?";
+    $comment_data = array($feed["id"]);
+    $comment_stmt = $dbh->prepare($comment_$sql);
+    $comment_stmt->execute($comment_data);
+
+    $comments_array = array();
+
+    while (true) {
+        $comment_record = $comment_stmt->fetch(PDO::FETCH_ASSOC);
+        if ($comment_record == false) {
+            break;
+        }
+        $commnets_array[] = $commnet_record;
+    }
+
+    $record["comments"] = $comments_array;
+
+
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -111,7 +131,7 @@
             <input type="submit" value="投稿する" class="btn btn-primary">
           </form>
         </div>
-        <?php foreach ($feeds as $feed) { ?>
+        <?php foreach ($feeds as $feed): ?>
           <div class="thumbnail">
             <div class="row">
               <div class="col-xs-1">
@@ -135,14 +155,26 @@
                 <?php else: ?>
                   <a href="unlike.php?feed_id=<?php echo $feed['id']; ?>"><button type="submit" class="btn btn-default btn-xs"><i class="fa fa-thumbs-up" aria-hidden="true"></i>いいね！を取り消す</button>
                 <?php endif; ?>
-                <span class="like_count">いいね数 : 100</span>
-                <span class="comment_count">コメント数 : 9</span>
+                <?php if ($feed["like_count"] > 0): ?>
+                  <span class="like_count">いいね数 : <?php echo $feed["like_count"]; ?></span>
+                <?php endif; ?>
+
+                <?php if ($feed["comment_count"] == 0): ?>
+                  <span class="comment_count">コメント</span>
+                <?php else: ?>
+                  <span class="comment_count">コメント数 : <?php echo $feed["comment_count"]; ?></span>
+                <?php endif; ?>
+
+                <!-- 自身の投稿のみ編集と削除可能に条件分岐 -->
+                <?php if ($feed["user_id"] == $_SESSION["id"]): ?>
                   <a href="edit.php?feed_id=<?php echo $feed['id']; ?>" class="btn btn-success btn-xs">編集</a>
-                  <a href="delete.php?feed_id=<?php echo $feed['id']; ?>" class="btn btn-danger btn-xs">削除</a>
+                  <!-- onclickで関数呼び出し -->
+                  <a onclick="return confirm('ほんとに消すの？')" href="delete.php?feed_id=<?php echo $feed['id']; ?>" class="btn btn-danger btn-xs">削除</a>
+                <?php endif; ?>
               </div>
             </div>
           </div>
-        <?php } ?>
+        <?php endforeach; ?>
         <div aria-label="Page navigation">
           <ul class="pager">
             <li class="previous disabled"><a href="#"><span aria-hidden="true">&larr;</span> Older</a></li>
