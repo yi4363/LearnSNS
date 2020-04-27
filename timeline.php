@@ -111,26 +111,26 @@
             <input type="submit" value="投稿する" class="btn btn-primary">
           </form>
         </div>
+        <?php foreach ($feeds as $feed) { ?>
           <div class="thumbnail">
             <div class="row">
               <div class="col-xs-1">
-                <img src="https://placehold.jp/40x40.png" width="40">
+                <img src="user_profile_img/<?php echo $feed['img_name']; ?>" width="40">
               </div>
               <div class="col-xs-11">
-                野原ひろし<br>
-                <a href="#" style="color: #7F7F7F;">2018-03-03</a>
+                <?php echo $feed["name"]; ?><br>
+                <a href="#" style="color: #7F7F7F;"><?php echo $feed["created"]; ?></a>
               </div>
             </div>
             <div class="row feed_content">
               <div class="col-xs-12" >
-                <span style="font-size: 24px;">夢は逃げない。逃げるのはいつも自分だ。</span>
+                <span style="font-size: 24px;"><?php echo $feed["feed"]; ?></span>
               </div>
             </div>
             <div class="row feed_sub">
               <div class="col-xs-12">
                 <form method="POST" action="" style="display: inline;">
                   <input type="hidden" name="feed_id" >
-                  
                     <input type="hidden" name="like" value="like">
                     <button type="submit" class="btn btn-default btn-xs"><i class="fa fa-thumbs-up" aria-hidden="true"></i>いいね！</button>
                 </form>
@@ -141,6 +141,7 @@
               </div>
             </div>
           </div>
+        <?php } ?>
         <div aria-label="Page navigation">
           <ul class="pager">
             <li class="previous disabled"><a href="#"><span aria-hidden="true">&larr;</span> Older</a></li>
