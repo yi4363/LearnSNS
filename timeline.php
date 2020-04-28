@@ -172,6 +172,10 @@
                   <a onclick="return confirm('ほんとに消すの？')" href="delete.php?feed_id=<?php echo $feed['id']; ?>" class="btn btn-danger btn-xs">削除</a>
                 <?php endif; ?>
               </div>
+              <!-- require,処理中断あり include,処理中断なし
+              コメント押されたら表示される領域処理を読み込み -->
+              <!-- 設定した変数内容をそのまま保持して遷移できる -->
+              <?php include("comment_view.php"); ?>
             </div>
           </div>
         <?php endforeach; ?>
