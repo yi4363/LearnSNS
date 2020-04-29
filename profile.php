@@ -10,6 +10,13 @@
         $user_id = $_SESSION["id"];
     }
 
+    // サインインしているユーザーの情報
+    $signin_sql = "SELECT * FROM `users` WHERE `id`=?";
+    $signin_data = array($_SESSION["id"]);
+    $signin_stmt = $dbh->prepare($signin_sql);
+    $signin_stmt->execute($signin_data);
+    $signin_user = $signin_stmt->fetch(PDO::FETCH_ASSOC);
+
     $sql = "SELECT * FROM `users` WHERE `id`=?";
     $data = array($user_id);
     $stmt = $dbh->prepare($sql);
@@ -18,7 +25,8 @@
 
     // フォロー一覧の取得
     // 表示されているプロフィール主がフォローしている人の一覧（ログイン者 or パラメータで指定したID主）
-    $following_sql = "SELECT `fw`.*, `u`.name, `u`.img_name, `u`.`created` FROM `followers` AS `fw` LEFT JOIN `users` AS `u` ON `fw`.`follower_id` = `u`.`id` WHERE `user_id`=?";
+    // ?がフォローしている人を取り出す
+    $following_sql = "SELECT `fw`.*, `u`.name, `u`.img_name, `u`.`created` FROM `followers` AS `fw` LEFT JOIN `users` AS `u` ON `fw`.`user_id` = `u`.`id` WHERE `follower_id`=?";
     $following_data = array($user_id);
     $following_stmt = $dbh->prepare($following_sql);
     $following_stmt->execute($following_data);
@@ -31,6 +39,33 @@
         }
         $following[] = $following_record;
     }
+
+    // フォロワー一覧の取得
+    // ?をフォローしている人を取得する
+    $followers_sql = "SELECT `fw`.*, `u`.`name`, `u`.`img_name`, `u`.`created` FROM `followers` AS `fw` LEFT JOIN `users` AS `u` ON `fw`.`followers_id` = `u`.`id` WHERE `user_id`=?";
+    $followers_data = array($user_id);
+    $followers_stmt = $dbh->prepare($followers_sql);
+    $followers_stmt->execute($followers_data);
+
+    $followers = array();
+
+    // フラグで判定
+    // サインインユーザーが一覧表示されているユーザーをフォローしていたら１、していなければ０
+    $follow_flag = 0;
+
+    while (true) {
+        $followers_record = $folloers_stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($followers_record == false) {
+            break;
+        }
+
+        // サインインユーザーがフォローしている人がいるかをチェック
+        if ($followers_record["follower_id"] == $_SESSION["id"]) {
+            $follower_flag = 1;
+        }
+        $followers[] = $followers_record;
+    }
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -42,46 +77,23 @@
   <link rel="stylesheet" type="text/css" href="assets/css/style.css">
 </head>
 <body style="margin-top: 60px; background: #E4E6EB; ">
-  <nav class="navbar navbar-default navbar-fixed-top">
-    <div class="container">
-      <div class="navbar-header">
-        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse1" aria-expanded="false">
-          <span class="sr-only">Toggle navigation</span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        <a class="" href="/">LearnSNS</a>
-      </div>
-      <div class="collapse navbar-collapse" id="navbar-collapse1">
-        <ul class="nav navbar-nav">
-          <li><a href="timeline.php">タイムライン</a></li>
-          <li class="active"><a href="#">ユーザー一覧</a></li>
-        </ul>
-        <form action="" method="get" class="navbar-form navbar-left" role="search">
-          <div type="text" name="search_word" class="form-control" placeholder="投稿を検索">
-          </div>
-          <button type="submit" class="btn btn-default">検索</button>
-        </form>
-        <ul class="nav navbar-nav navbar-right">
-          <li class="dropdown">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><img src="" width="18" class="img-circle">test <span class="caret"></span></a>
-            <ul class="dropdown-menu">
-              <li><a href="#">マイページ</a></li>
-              <li><a href="signout.php">サインアウト</a></li>
-            </ul>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </nav>
+
+  <!-- 使い回しのナビゲーションバー読み込み -->
+  <?php include("navbar.php"); ?>
 
   <div class="container">
     <div class="row">
       <div class="col-xs-3 text-center">
         <img src="user_profile_img/<?php echo $profile_user['img_name']; ?>" class='img-thumbnail'>
-        <h2><?php echo $profile_user["name"]; ?></h2>
-        <button class="btn btn-default btn-block">フォローする</button>
+        <h3><?php echo $profile_user["name"]; ?></h3>
+
+        <?php if ($user_id != $_SESSION["id"]): ?>
+          <?php if ($follow_flag == 0): ?>
+            <a href="follow.php?user_id=<?php echo $profile_user['id']; ?>"><button class="btn btn-default btn-block">フォローする</button>></a>
+          <?php else: ?>
+            <a href="unfollow.php?user_id=<?php echo $profile_user["id"]; ?>"><button class="btn btn-default btn-block">フォロー解除する</button></a>
+          <?php endif; ?>
+        <?php endif; ?>
       </div>
       <div class="col-xs-9">
         <ul class="nav nav-tabs">
@@ -92,6 +104,26 @@
             <a href="#tab2" data-toggle=tab>Following</a>
           </li>
         </ul>
+
+        <!-- followersの中身 -->
+        <div class="tab-content">
+          <div id="tab1" class="tab-pane fadein active">
+            <?php foreach ($followers as $follower): ?>
+              <div class="thumbnail">
+                <div class="row">
+                  <div class="col-xs-2">
+                    <img src="user_profile_img/<?php echo $follower["img_name"]; ?>" width="80">
+                  </div>
+                  <div class="col-xs-10">
+                    名前 <?php echo $follower["name"]; ?><br>
+                    <a href="#" style="color: #7F7F7F;"><?php echo $follower["created"]; ?>からメンバー</a>
+                  </div>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          </div>
+                    
+        <!-- followingの中身 -->
         <?php foreach ($following as $following_user): ?>
           <div class="thumbnail">
             <div class="row">
@@ -106,6 +138,9 @@
           </div>
         <?php endforeach; ?>
       </div>
+
+
+      <!-- followerの中身 -->
     </div>
   </div>
   <script src="assets/js/jquery-3.1.1.js"></script>
