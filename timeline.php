@@ -21,6 +21,32 @@
         }
     }
 
+    // ページネーション処理
+    $page = ""; // ページ番号が入る変数
+    $page_row_number = 5; // １ページあたりに表示するデータ件数
+
+    if (isset($_GET["page"])) {
+        $page = $_GET["page"];
+    }else{
+        // get送信されているページ数がない場合は１ページ目として扱う
+      $page = 1;
+    }
+
+    $page = max($page, 1);
+
+    // データ件数からページ数を計算する
+    $sql_count = "SELECT COUNT(*) AS `count` FROM `feeds`";
+    $stmt_count = $dbh->prepare($sql_count);
+    $stmt_count->execute();
+    $record_cnt = $stmt_count->fetch(PDO::FETCH_ASSOC);
+
+    // ceil, 少数の切り上げ処理
+    $all_page_number = ceil($record_cnt["count"] / $page_now_number);
+
+    $page = min($page, $all_page_number);
+
+    $start = ($page -1)*$page_row_number;
+
     $sql = "SELECT * FROM `users` WHERE `id`=?";
     $data = array($_SESSION["id"]);
     $stmt = $dbh->prepare($sql);
@@ -86,9 +112,6 @@
     }else{
         $record["like_flag"] = 0;
     }
-
-    
-
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -205,8 +228,17 @@
         <?php endforeach; ?>
         <div aria-label="Page navigation">
           <ul class="pager">
-            <li class="previous disabled"><a href="#"><span aria-hidden="true">&larr;</span> Older</a></li>
-            <li class="next"><a href="#">Newer <span aria-hidden="true">&rarr;</span></a></li>
+            <?php if ($page == 1): ?>
+              <li class="previous disabled"><a href="#"><span aria-hidden="true">&larr;</span>Newer</a></li>
+            <?php else: ?>
+              <li class="next"><a href="timeline.php?page=<?php echo $page-1; ?>"><span aria-hidden="true">&rarr;</span>Newer</a></li>
+            <?php endif; ?>
+
+            <?php if ($page == $all_page_number): ?>
+              <li class="next disabled"><a href="#">Older <span aria-hidden="true">&arr;</span></a></li>
+            <?php else: ?>
+              <li class="next"><a href="timeline.php?page=<?php echo $page+1; ?>">Older <span aria-hidden="true">&rarr;</span></a></li>
+            <?php endif; ?>
           </ul>
         </div>
       </div>
