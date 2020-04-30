@@ -64,6 +64,30 @@
 
     $record["comments"] = $comments_array;
 
+    // いいね数を取得する
+    $like_sql = "SELECT COUNT(*) AS `like_count` FROM `likes` WHERE `feed_id`=?";
+    $like_data = array($record_id["id"]);
+    $like_stmt = $dbh->prepare($like_sql);
+    $like_stmt->exewcute($like_data);
+    $like = $like_stmt->fetch(PDO:: FETCH_ASSOC);
+
+    $record["like_count"] = $like["like_count"];
+
+    // いいね済かをフラグにて判断する
+    // 取得できるレコードがあるならいいね済み
+    $like_flag_sql = "SELECT COUNT(*) AS `like_flag` FROM `likes` WHERE `user_id`=? AND `feed_id`=?";
+    $like_flag_data = array($_SESSION["id"], $record["id"]);
+    $like_flag_stmt = $dbh->prepare($like_flag_sql);
+    $like_flag_stmt = exeute($like_flag_data);
+    $like_flag_likes->fetch(PDO::FETCH_ASSOC);
+
+    if ($like_flag_likes["like_flag"] > 0) {
+        $record["like_flag"] = 1;
+    }else{
+        $record["like_flag"] = 0;
+    }
+
+    
 
 ?>
 <!DOCTYPE html>
